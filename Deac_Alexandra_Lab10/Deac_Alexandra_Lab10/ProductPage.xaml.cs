@@ -1,39 +1,40 @@
-﻿using System;
+﻿using Deac_Alexandra_Lab10.Models;
+using System;
 using System.Collections.Generic;
-using Deac_Alexandra_Lab10.Models;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace Deac_Alexandra_Lab10
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class ListPage : ContentPage
+    public partial class ProductPage : ContentPage
     {
         ShopList sl;
-        public ListPage()
+        public ProductPage(ShopList slist)
         {
             InitializeComponent();
+            sl = slist;
         }
-
         async void OnSaveButtonClicked(object sender, EventArgs e)
         {
-            var slist = (ShopList)BindingContext;
-            slist.Date = DateTime.UtcNow;
-            await App.Database.SaveShopListAsync(slist);
-            await Navigation.PopAsync();
+            var product = (Product)BindingContext;
+            await App.Database.SaveProductAsync(product);
+            listView.ItemsSource = await App.Database.GetProductsAsync();
         }
         async void OnDeleteButtonClicked(object sender, EventArgs e)
         {
-            var slist = (ShopList)BindingContext;
-            await App.Database.DeleteShopListAsync(slist);
-            await Navigation.PopAsync();
+            var product = (Product)BindingContext;
+            await App.Database.DeleteProductAsync(product);
+            listView.ItemsSource = await App.Database.GetProductsAsync();
         }
-        async void OnChooseButtonClicked(object sender, EventArgs e)
+        protected override async void OnAppearing()
         {
-            await Navigation.PushAsync(new ProductPage((ShopList)this.BindingContext)
-            {
-                BindingContext = new Product()
-            });
+            base.OnAppearing();
+            listView.ItemsSource = await App.Database.GetProductsAsync();
         }
         async void OnListViewItemSelected(object sender, SelectedItemChangedEventArgs e)
         {
@@ -50,12 +51,6 @@ namespace Deac_Alexandra_Lab10
                 p.ListProducts = new List<ListProduct> { lp };
                 await Navigation.PopAsync();
             }
-        }
-        protected override async void OnAppearing()
-        {
-            base.OnAppearing();
-            var shopl = (ShopList)BindingContext;
-            listView.ItemsSource = await App.Database.GetListProductsAsync(shopl.ID);
         }
     }
 }
